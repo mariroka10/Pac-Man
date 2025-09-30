@@ -1,44 +1,4 @@
-# pacman.py
-# ---------
-# Licensing Information:  You are free to use or extend these projects for
-# educational purposes provided that (1) you do not distribute or publish
-# solutions, (2) you retain this notice, and (3) you provide clear
-# attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
-# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
-# The core projects and autograders were primarily created by John DeNero
-# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
-# Student side autograding was added by Brad Miller, Nick Hay, and
-# Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
-
-"""
-Pacman.py holds the logic for the classic pacman game along with the main
-code to run a game.  This file is divided into three sections:
-
-  (i)  Your interface to the pacman world:
-          Pacman is a complex environment.  You probably don't want to
-          read through all of the code we wrote to make the game runs
-          correctly.  This section contains the parts of the code
-          that you will need to understand in order to complete the
-          project.  There is also some code in game.py that you should
-          understand.
-
-  (ii)  The hidden secrets of pacman:
-          This section contains all of the logic code that the pacman
-          environment uses to decide who can move where, who dies when
-          things collide, etc.  You shouldn't need to read this section
-          of code, but you can if you want.
-
-  (iii) Framework to start a game:
-          The final section contains the code for reading the command
-          you use to set up the game, then starting up a new game, along with
-          linking in all the external parts (agent functions, graphics).
-          Check this section out to see all the options available to you.
-
-To play your first game, type 'python pacman.py' from the command line.
-The keys are 'a', 's', 'd', and 'w' to move (or arrow keys).  Have fun!
-"""
 from game import GameStateData
 from game import Game
 from game import Directions
@@ -48,30 +8,12 @@ from util import manhattanDistance
 import util, layout
 import sys, types, time, random, os
 
-###################################################
-# YOUR INTERFACE TO THE PACMAN WORLD: A GameState #
-###################################################
 
 class GameState:
-    """
-    A GameState specifies the full game state, including the food, capsules,
-    agent configurations and score changes.
+  
 
-    GameStates are used by the Game object to capture the actual state of the game and
-    can be used by agents to reason about the game.
+  
 
-    Much of the information in a GameState is stored in a GameStateData object.  We
-    strongly suggest that you access that data via the accessor methods below rather
-    than referring to the GameStateData object directly.
-
-    Note that in classic Pacman, Pacman is always agent 0.
-    """
-
-    ####################################################
-    # Accessor methods: use these to access state data #
-    ####################################################
-
-    # static variable keeps track of which states have had getLegalActions called
     explored = set()
     def getAndResetExplored():
         tmp = GameState.explored.copy()
@@ -80,44 +22,33 @@ class GameState:
     getAndResetExplored = staticmethod(getAndResetExplored)
 
     def getLegalActions( self, agentIndex=0 ):
-        """
-        Returns the legal actions for the agent specified.
-        """
-#        GameState.explored.add(self)
+        
         if self.isWin() or self.isLose(): return []
 
-        if agentIndex == 0:  # Pacman is moving
+        if agentIndex == 0: 
             return PacmanRules.getLegalActions( self )
         else:
             return GhostRules.getLegalActions( self, agentIndex )
 
     def generateChild( self, agentIndex, action):
-        """
-        Returns the child state after the specified agent takes the action.
-        """
-        # Check that children exist
+       
         if self.isWin() or self.isLose(): raise Exception('Can\'t generate a child of a terminal state.')
 
-        # Copy current state
         state = GameState(self)
 
-        # Let agent's logic deal with its action's effects on the board
-        if agentIndex == 0:  # Pacman is moving
+        if agentIndex == 0: 
             state.data._eaten = [False for i in range(state.getNumAgents())]
             PacmanRules.applyAction( state, action )
-        else:                # A ghost is moving
+        else:                
             GhostRules.applyAction( state, action, agentIndex )
 
-        # Time passes
         if agentIndex == 0:
-            state.data.scoreChange += -TIME_PENALTY # Penalty for waiting around
+            state.data.scoreChange += -TIME_PENALTY 
         else:
             GhostRules.decrementTimer( state.data.agentStates[agentIndex] )
 
-        # Resolve multi-agent effects
         GhostRules.checkDeath( state, agentIndex )
 
-        # Book keeping
         state.data._agentMoved = agentIndex
         state.data.score += state.data.scoreChange
         GameState.explored.add(self)
@@ -128,18 +59,11 @@ class GameState:
         return self.getLegalActions( 0 )
 
     def generatePacmanChild( self, action ):
-        """
-        Generates the child state after the specified pacman move
-        """
+      
         return self.generateChild( 0, action )
 
     def getPacmanState( self ):
-        """
-        Returns an AgentState object for pacman (in game.py)
-
-        state.pos gives the current position
-        state.direction gives the travel vector
-        """
+      
         return self.data.agentStates[0].copy()
 
     def getPacmanPosition( self ):
@@ -168,36 +92,18 @@ class GameState:
         return float(self.data.score)
 
     def getCapsules(self):
-        """
-        Returns a list of positions (x,y) of the remaining capsules.
-        """
+       
         return self.data.capsules
 
     def getNumFood( self ):
         return self.data.food.count()
 
     def getFood(self):
-        """
-        Returns a Grid of boolean food indicator variables.
-
-        Grids can be accessed via list notation, so to check
-        if there is food at (x,y), just call
-
-        currentFood = state.getFood()
-        if currentFood[x][y] == True: ...
-        """
+       
         return self.data.food
 
     def getWalls(self):
-        """
-        Returns a Grid of boolean wall indicator variables.
-
-        Grids can be accessed via list notation, so to check
-        if there is a wall at (x,y), just call
-
-        walls = state.getWalls()
-        if walls[x][y] == True: ...
-        """
+       
         return self.data.layout.walls
 
     def hasFood(self, x, y):
@@ -212,15 +118,10 @@ class GameState:
     def isWin( self ):
         return self.data._win
 
-    #############################################
-    #             Helper methods:               #
-    # You shouldn't need to call these directly #
-    #############################################
+  
 
     def __init__( self, prevState = None ):
-        """
-        Generates a new state by copying information from its predecessor.
-        """
+       
         if prevState != None: # Initial state
             self.data = GameStateData(prevState.data)
         else:
@@ -232,15 +133,11 @@ class GameState:
         return state
 
     def __eq__( self, other ):
-        """
-        Allows two states to be compared.
-        """
+       
         return hasattr(other, 'data') and self.data == other.data
 
     def __hash__( self ):
-        """
-        Allows states to be keys of dictionaries.
-        """
+       
         return hash( self.data )
 
     def __str__( self ):
@@ -248,26 +145,17 @@ class GameState:
         return str(self.data)
 
     def initialize( self, layout, numGhostAgents=1000 ):
-        """
-        Creates an initial game state from a layout array (see layout.py).
-        """
+        
         self.data.initialize(layout, numGhostAgents)
 
-############################################################################
-#                     THE HIDDEN SECRETS OF PACMAN                         #
-#                                                                          #
-# You shouldn't need to look through the code in this section of the file. #
-############################################################################
 
-SCARED_TIME = 40    # Moves ghosts are scared
-COLLISION_TOLERANCE = 0.7 # How close ghosts must be to Pacman to kill
-TIME_PENALTY = 1 # Number of points lost each round
+
+SCARED_TIME = 40   
+COLLISION_TOLERANCE = 0.7 
+TIME_PENALTY = 1 
 
 class ClassicGameRules:
-    """
-    These game rules manage the control flow of a game, deciding when
-    and how the game starts and ends.
-    """
+    
     def __init__(self, timeout=30):
         self.timeout = timeout
 
@@ -282,9 +170,7 @@ class ClassicGameRules:
         return game
 
     def process(self, state, game):
-        """
-        Checks to see whether it is time to end the game.
-        """
+      
         if state.isWin(): self.win(state, game)
         if state.isLose(): self.lose(state, game)
 
@@ -321,23 +207,16 @@ class ClassicGameRules:
         return 0
 
 class PacmanRules:
-    """
-    These functions govern how pacman interacts with his environment under
-    the classic game rules.
-    """
+    
     PACMAN_SPEED=1
 
     def getLegalActions( state ):
-        """
-        Returns a list of possible actions.
-        """
+        
         return Actions.getPossibleActions( state.getPacmanState().configuration, state.data.layout.walls )
     getLegalActions = staticmethod( getLegalActions )
 
     def applyAction( state, action ):
-        """
-        Edits the state to reflect the results of the action.
-        """
+       
         legal = PacmanRules.getLegalActions( state )
         if action not in legal:
             raise Exception("Illegal action " + str(action))
@@ -379,15 +258,10 @@ class PacmanRules:
     consume = staticmethod( consume )
 
 class GhostRules:
-    """
-    These functions dictate how ghosts interact with their environment.
-    """
+   
     GHOST_SPEED=1.0
     def getLegalActions( state, ghostIndex ):
-        """
-        Ghosts cannot stop, and cannot turn around unless they
-        reach a dead end, but can turn 90 degrees at intersections.
-        """
+        
         conf = state.getGhostState( ghostIndex ).configuration
         possibleActions = Actions.getPossibleActions( conf, state.data.layout.walls )
         reverse = Actions.reverseDirection( conf.direction )
@@ -454,9 +328,7 @@ class GhostRules:
         ghostState.configuration = ghostState.start
     placeGhost = staticmethod( placeGhost )
 
-#############################
-# FRAMEWORK TO START A GAME #
-#############################
+
 
 def default(str):
     return str + ' [Default: %default]'
@@ -474,18 +346,9 @@ def parseAgentArgs(str):
     return opts
 
 def readCommand( argv ):
-    """
-    Processes the command used to run pacman from the command line.
-    """
+   
     from optparse import OptionParser
-    usageStr = """
-    USAGE:      python pacman.py <options>
-    EXAMPLES:   (1) python pacman.py
-                    - starts an interactive game
-                (2) python pacman.py --layout smallClassic --zoom 2
-                OR  python pacman.py -l smallClassic -z 2
-                    - starts an interactive game on a smaller board, zoomed in
-    """
+    usageStr =
     parser = OptionParser(usageStr)
 
     parser.add_option('-n', '--numGames', dest='numGames', type='int',
@@ -666,19 +529,9 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
     return games
 
 if __name__ == '__main__':
-    """
-    The main function called when pacman.py is run
-    from the command line:
 
-    > python pacman.py
-
-    See the usage string for more details.
-
-    > python pacman.py --help
-    """
     args = readCommand( sys.argv[1:] ) # Get game components based on input
     runGames( **args )
 
-    # import cProfile
-    # cProfile.run("runGames( **args )")
+
     pass
